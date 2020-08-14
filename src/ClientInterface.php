@@ -1,10 +1,12 @@
-<?php namespace PCextreme\RgwAdminClient;
+<?php
+namespace PCextreme\RgwAdminClient;
 
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\UriInterface;
 
 interface ClientInterface
 {
@@ -15,14 +17,14 @@ interface ClientInterface
      *
      * @return void
      */
-    public function setUriFactory(UriFactory $uriFactory);
+    public function setUriFactory(UriFactory $uriFactory): void;
 
     /**
      * Returns the current UriFactory instance.
      *
      * @return UriFactory
      */
-    public function getUriFactory();
+    public function getUriFactory(): UriFactory;
 
     /**
      * Set the MessageFactory instance.
@@ -31,14 +33,14 @@ interface ClientInterface
      *
      * @return void
      */
-    public function setMessageFactory(MessageFactory $messageFactory);
+    public function setMessageFactory(MessageFactory $messageFactory): void;
 
     /**
      * Returns the current MessageFactory instance.
      *
      * @return MessageFactory
      */
-    public function getMessageFactory();
+    public function getMessageFactory(): MessageFactory;
 
     /**
      * Set the HttpClient instance.
@@ -47,16 +49,14 @@ interface ClientInterface
      *
      * @return void
      */
-    public function setHttpClient(HttpClient $httpClient);
+    public function setHttpClient(HttpClient $httpClient): void;
 
     /**
      * Returns the current HttpClient instance.
      *
      * @return PluginClient
-     *
-     * @throws \RuntimeException
      */
-    public function getHttpClient();
+    public function getHttpClient(): PluginClient;
 
     /**
      * Create request object instance.
@@ -66,10 +66,8 @@ interface ClientInterface
      * @param array $options
      *
      * @return RequestInterface
-     *
-     * @throws \InvalidArgumentException
      */
-    public function createRequest($command, $method, array $options = []);
+    public function createRequest(string $command, string $method, array $options = []): RequestInterface;
 
     /**
      * Send the HTTP request and return the parsed response.
@@ -77,10 +75,6 @@ interface ClientInterface
      * @param RequestInterface $request
      *
      * @return mixed
-     *
-     * @throws \Http\Client\Exception
-     * @throws \Exception
-     * @throws \RuntimeException
      */
     public function sendRequest(RequestInterface $request);
 }

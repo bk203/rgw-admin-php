@@ -1,18 +1,24 @@
-<?php namespace PCextreme\RgwAdminClient;
+<?php
 
+namespace PCextreme\RgwAdminClient;
+
+use Exception;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpClient;
 use Http\Discovery\Exception\NotFoundException;
 use Http\Discovery\HttpClientDiscovery;
-use Http\Discovery\MessageFactoryDiscovery;
-use Http\Discovery\UriFactoryDiscovery;
+use Http\Discovery\Psr17FactoryDiscovery;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
+use InvalidArgumentException;
 use PCextreme\RgwAdminClient\Authentication\SignatureV2;
+use Psr\Http\Client\ClientExceptionInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriInterface;
+use RuntimeException;
 
 class Client implements ClientInterface
 {
@@ -57,15 +63,13 @@ class Client implements ClientInterface
      * @param array $options
      * @param array $collaborators
      *
-     * @throws \InvalidArgumentException when the required options are not set.
+     * @throws InvalidArgumentException when the required options are not set.
      * @throws NotFoundException when there is no valid MessageFactory or HttpClient found.
      */
     public function __construct(array $options = [], array $collaborators = [])
     {
         $this->assertRequiredOptions($options);
-
         $this->setOptions($options);
-
         $this->setCollaborators($collaborators);
     }
 
@@ -76,7 +80,7 @@ class Client implements ClientInterface
      *
      * @return void
      */
-    protected function setOptions(array $options)
+    protected function setOptions(array $options): void
     {
         $possible = $this->getRequiredOptions();
 
@@ -96,10 +100,10 @@ class Client implements ClientInterface
      *
      * @throws NotFoundException when there is no MessageFactory, HttpClient or UriFactory found.
      */
-    protected function setCollaborators(array $collaborators)
+    protected function setCollaborators(array $collaborators): void
     {
         if (empty($collaborators['messageFactory'])) {
-            $collaborators['messageFactory'] = MessageFactoryDiscovery::find();
+            $collaborators['messageFactory'] = Psr17FactoryDiscovery::findRequestFactory();
         }
 
         $this->setMessageFactory($collaborators['messageFactory']);
@@ -111,7 +115,7 @@ class Client implements ClientInterface
         $this->setHttpClient($collaborators['httpClient']);
 
         if (empty($collaborators['uriFactory'])) {
-            $collaborators['uriFactory'] = UriFactoryDiscovery::find();
+            $collaborators['uriFactory'] = Psr17FactoryDiscovery::findUrlFactory();
         }
 
         $this->setUriFactory($collaborators['uriFactory']);
@@ -124,7 +128,7 @@ class Client implements ClientInterface
      *
      * @return void
      */
-    public function setUriFactory(UriFactory $uriFactory)
+    public function setUriFactory(UriFactory $uriFactory): void
     {
         $this->uriFactory = $uriFactory;
     }
@@ -134,7 +138,7 @@ class Client implements ClientInterface
      *
      * @return UriFactory
      */
-    public function getUriFactory()
+    public function getUriFactory(): UriFactory
     {
         return $this->uriFactory;
     }
@@ -146,7 +150,7 @@ class Client implements ClientInterface
      *
      * @return void
      */
-    public function setMessageFactory(MessageFactory $messageFactory)
+    public function setMessageFactory(MessageFactory $messageFactory): void
     {
         $this->messageFactory = $messageFactory;
     }
@@ -156,7 +160,7 @@ class Client implements ClientInterface
      *
      * @return MessageFactory
      */
-    public function getMessageFactory()
+    public function getMessageFactory(): MessageFactory
     {
         return $this->messageFactory;
     }
@@ -168,7 +172,7 @@ class Client implements ClientInterface
      *
      * @return void
      */
-    public function setHttpClient(HttpClient $httpClient)
+    public function setHttpClient(HttpClient $httpClient): void
     {
         $this->httpClient = $httpClient;
     }
@@ -178,9 +182,9 @@ class Client implements ClientInterface
      *
      * @return PluginClient
      *
-     * @throws \RuntimeException
+     * @throws RuntimeException
      */
-    public function getHttpClient()
+    public function getHttpClient(): PluginClient
     {
         if ($this->pluginClient !== null) {
             return $this->pluginClient;
@@ -203,7 +207,7 @@ class Client implements ClientInterface
      *
      * @return array
      */
-    protected function getRequiredOptions()
+    protected function getRequiredOptions(): array
     {
         return ['apiUrl', 'apiKey', 'secretKey'];
     }
@@ -215,15 +219,15 @@ class Client implements ClientInterface
      *
      * @return void
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    private function assertRequiredOptions(array $options)
+    private function assertRequiredOptions(array $options): void
     {
         $missing = array_diff_key(array_flip($this->getRequiredOptions()), $options);
 
         if (!empty($missing)) {
-            throw new \InvalidArgumentException(
-                'Required option(s) not defined: ' . implode(',', array_keys($missing))
+            throw new InvalidArgumentException(
+                'Required option(s) not defined: '.implode(',', array_keys($missing))
             );
         }
     }
@@ -234,17 +238,17 @@ class Client implements ClientInterface
      * @param string $command
      * @param array $options
      *
-     * @return \Psr\Http\Message\UriInterface
+     * @return UriInterface
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    protected function buildUri($command, array $options)
+    protected function buildUri(string $command, array $options): UriInterface
     {
-        $baseUrl = $this->apiUrl . '/' . $command;
+        $baseUrl = $this->apiUrl.'/'.$command;
 
         $options['format'] = 'json';
 
-        $baseUrl .= '?' . http_build_query($options);
+        $baseUrl .= '?'.http_build_query($options);
 
         return $this->getUriFactory()->createUri($baseUrl);
     }
@@ -258,9 +262,9 @@ class Client implements ClientInterface
      *
      * @return RequestInterface
      *
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    public function createRequest($command, $method, array $options = [])
+    public function createRequest(string $command, string $method, array $options = []): RequestInterface
     {
         $uri = $this->buildUri($command, $options);
 
@@ -274,9 +278,9 @@ class Client implements ClientInterface
      *
      * @return mixed
      *
-     * @throws \Http\Client\Exception
-     * @throws \Exception
-     * @throws \RuntimeException
+     * @throws Exception
+     * @throws RuntimeException
+     * @throws ClientExceptionInterface
      */
     public function sendRequest(RequestInterface $request)
     {
@@ -292,14 +296,14 @@ class Client implements ClientInterface
      *
      * @return mixed
      *
-     * @throws \Exception
+     * @throws Exception
      */
     protected function parseResponse(ResponseInterface $response)
     {
         $readable = $response->getBody()->isReadable();
 
         if ($readable === false) {
-            throw new \Exception('Unable to parse response.');
+            throw new Exception('Unable to parse response.');
         }
 
         return json_decode($response->getBody()->getContents());
@@ -309,27 +313,27 @@ class Client implements ClientInterface
      * Create request and parse response.
      *
      * @param string $method
-     * @param array  $arguments
+     * @param array $arguments
      *
      * @return RequestInterface
      *
-     * @throws \Exception
-     * @throws \Http\Client\Exception
-     * @throws \InvalidArgumentException
-     * @throws \RuntimeException
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws RuntimeException
+     * @throws ClientExceptionInterface
      */
-    public function __call($method, $arguments)
+    public function __call(string $method, array $arguments): RequestInterface
     {
         $method = strtolower($method);
 
         if ($method !== 'delete' && $method !== 'get' &&
-            $method !== 'post'   && $method !== 'put'
+            $method !== 'post' && $method !== 'put'
         ) {
-            throw new \InvalidArgumentException('Unsupported HTTP method specified.');
+            throw new InvalidArgumentException('Unsupported HTTP method specified.');
         }
 
         if (empty($arguments[0])) {
-            throw new \InvalidArgumentException('No resource specified.');
+            throw new InvalidArgumentException('No resource specified.');
         }
 
         list ($resource, $parameters) = $arguments;

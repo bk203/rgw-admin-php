@@ -6,9 +6,7 @@ PHP client for the Rados Gateway admin operations api.
 
 ## Requirements
 
-* PHP 5.6
-* PHP 7.0
-* PHP 7.1
+* Minimum PHP 7.1
 
 ## Installation
 
