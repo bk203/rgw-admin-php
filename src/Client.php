@@ -2,6 +2,7 @@
 
 namespace bk203\RgwAdminClient;
 
+use bk203\RgwAdminClient\Authentication\SignatureV2;
 use Exception;
 use Http\Client\Common\Plugin\AuthenticationPlugin;
 use Http\Client\Common\Plugin\ErrorPlugin;
@@ -10,13 +11,12 @@ use Http\Client\HttpClient;
 use Http\Discovery\Exception\NotFoundException;
 use Http\Discovery\HttpClientDiscovery;
 use Http\Discovery\Psr17FactoryDiscovery;
-use Http\Message\MessageFactory;
-use Http\Message\UriFactory;
 use InvalidArgumentException;
-use PCextreme\RgwAdminClient\Authentication\SignatureV2;
 use Psr\Http\Client\ClientExceptionInterface;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\UriFactoryInterface;
 use Psr\Http\Message\UriInterface;
 use RuntimeException;
 
@@ -38,9 +38,9 @@ class Client implements ClientInterface
     private $secretKey;
 
     /**
-     * @var MessageFactory
+     * @var RequestFactoryInterface
      */
-    private $messageFactory;
+    private $requestFactory;
 
     /**
      * @var HttpClient
@@ -53,7 +53,7 @@ class Client implements ClientInterface
     private $pluginClient;
 
     /**
-     * @var UriFactory
+     * @var UriFactoryInterface
      */
     private $uriFactory;
 
@@ -102,11 +102,11 @@ class Client implements ClientInterface
      */
     protected function setCollaborators(array $collaborators): void
     {
-        if (empty($collaborators['messageFactory'])) {
-            $collaborators['messageFactory'] = Psr17FactoryDiscovery::findRequestFactory();
+        if (empty($collaborators['requestFactory'])) {
+            $collaborators['requestFactory'] = Psr17FactoryDiscovery::findRequestFactory();
         }
 
-        $this->setMessageFactory($collaborators['messageFactory']);
+        $this->setRequestFactory($collaborators['requestFactory']);
 
         if (empty($collaborators['httpClient'])) {
             $collaborators['httpClient'] = HttpClientDiscovery::find();
@@ -124,11 +124,11 @@ class Client implements ClientInterface
     /**
      * Set the UriFactory instance.
      *
-     * @param UriFactory $uriFactory
+     * @param UriFactoryInterface $uriFactory
      *
      * @return void
      */
-    public function setUriFactory(UriFactory $uriFactory): void
+    public function setUriFactory(UriFactoryInterface $uriFactory): void
     {
         $this->uriFactory = $uriFactory;
     }
@@ -136,33 +136,33 @@ class Client implements ClientInterface
     /**
      * Returns the current UriFactory instance.
      *
-     * @return UriFactory
+     * @return UriFactoryInterface
      */
-    public function getUriFactory(): UriFactory
+    public function getUriFactory(): UriFactoryInterface
     {
         return $this->uriFactory;
     }
 
     /**
-     * Set the MessageFactory instance.
+     * Set the RequestFactory instance.
      *
-     * @param MessageFactory $messageFactory
+     * @param RequestFactoryInterface $messageFactory
      *
      * @return void
      */
-    public function setMessageFactory(MessageFactory $messageFactory): void
+    public function setRequestFactory(RequestFactoryInterface $requestFactory): void
     {
-        $this->messageFactory = $messageFactory;
+        $this->requestFactory = $requestFactory;
     }
 
     /**
-     * Returns the current MessageFactory instance.
+     * Returns the current RequestFactory instance.
      *
-     * @return MessageFactory
+     * @return RequestFactoryInterface
      */
-    public function getMessageFactory(): MessageFactory
+    public function getRequestFactory(): RequestFactoryInterface
     {
-        return $this->messageFactory;
+        return $this->requestFactory;
     }
 
     /**
@@ -268,7 +268,7 @@ class Client implements ClientInterface
     {
         $uri = $this->buildUri($command, $options);
 
-        return $this->getMessageFactory()->createRequest($method, $uri);
+        return $this->getRequestFactory()->createRequest($method, $uri);
     }
 
     /**

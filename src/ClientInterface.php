@@ -3,43 +3,43 @@ namespace bk203\RgwAdminClient;
 
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpClient;
-use Http\Message\MessageFactory;
-use Http\Message\UriFactory;
+use Psr\Http\Message\RequestFactoryInterface;
 use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\UriFactoryInterface;
 
 interface ClientInterface
 {
     /**
      * Set the UriFactory instance.
      *
-     * @param UriFactory $uriFactory
+     * @param UriFactoryInterface $uriFactory
      *
      * @return void
      */
-    public function setUriFactory(UriFactory $uriFactory): void;
+    public function setUriFactory(UriFactoryInterface $uriFactory): void;
 
     /**
      * Returns the current UriFactory instance.
      *
-     * @return UriFactory
+     * @return UriFactoryInterface
      */
-    public function getUriFactory(): UriFactory;
+    public function getUriFactory(): UriFactoryInterface;
 
     /**
-     * Set the MessageFactory instance.
+     * Set the RequestFactory instance.
      *
-     * @param MessageFactory $messageFactory
+     * @param RequestFactoryInterface $messageFactory
      *
      * @return void
      */
-    public function setMessageFactory(MessageFactory $messageFactory): void;
+    public function setRequestFactory(RequestFactoryInterface $messageFactory): void;
 
     /**
      * Returns the current MessageFactory instance.
      *
-     * @return MessageFactory
+     * @return RequestFactoryInterface
      */
-    public function getMessageFactory(): MessageFactory;
+    public function getRequestFactory(): RequestFactoryInterface;
 
     /**
      * Set the HttpClient instance.
