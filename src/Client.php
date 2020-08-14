@@ -1,6 +1,6 @@
 <?php
 
-namespace PCextreme\RgwAdminClient;
+namespace bk203\RgwAdminClient;
 
 use Exception;
 use Http\Client\Common\Plugin\AuthenticationPlugin;

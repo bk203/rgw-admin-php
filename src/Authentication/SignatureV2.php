@@ -1,6 +1,6 @@
 <?php
 
-namespace PCextreme\RgwAdminClient\Authentication;
+namespace bk203\RgwAdminClient\Authentication;
 
 use Http\Message\Authentication;
 use Psr\Http\Message\RequestInterface;

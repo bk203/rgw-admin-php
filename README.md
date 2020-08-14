@@ -1,5 +1,3 @@
-[![github-readme_header](https://cloud.githubusercontent.com/assets/2406615/17754363/6e205280-64d4-11e6-946d-e7e7aedb2e30.png)](https://www.pcextreme.nl)
-
 # Rados Gateway API Client
 
 PHP client for the Rados Gateway admin operations api.
@@ -25,24 +23,6 @@ $ composer require php-http/curl-client guzzlehttp/psr7
 ```
 
 After that you are ready to install this package:
-
-```bash
-$ composer require pcextreme/rgw-admin-client
-```
-
-### Express installation
-
-If your application already contains a compatible HTTP client, just install the correct HTTP client 
-adapter before using this package. For a list of compatible 
-adapters [click here](http://docs.php-http.org/en/latest/clients.html).
-
-For example if your application depends on `guzzlehttp/guzzle` version 6 you need to install the guzzle 6 adapter package.
-
-```bash
-$ composer require php-http/guzzle6-adapter
-```
-
-After the installation of a client adapter you are ready to install this package:
 
 ```bash
 $ composer require pcextreme/rgw-admin-client

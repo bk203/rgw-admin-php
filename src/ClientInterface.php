@@ -1,12 +1,11 @@
 <?php
-namespace PCextreme\RgwAdminClient;
+namespace bk203\RgwAdminClient;
 
 use Http\Client\Common\PluginClient;
 use Http\Client\HttpClient;
 use Http\Message\MessageFactory;
 use Http\Message\UriFactory;
 use Psr\Http\Message\RequestInterface;
-use Psr\Http\Message\UriInterface;
 
 interface ClientInterface
 {
