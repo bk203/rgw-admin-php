@@ -25,7 +25,7 @@ $ composer require php-http/curl-client guzzlehttp/psr7
 After that you are ready to install this package:
 
 ```bash
-$ composer require pcextreme/rgw-admin-client
+$ composer require bk203/rgw-admin-client
 ```
 
 ## Usage
