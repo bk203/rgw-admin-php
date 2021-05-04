@@ -4,18 +4,18 @@ PHP client for the Rados Gateway admin operations api.
 
 ## Requirements
 
-* Minimum PHP 7.1
+* Minimum PHP 8.0
 
 ## Installation
 
 ### What type of installation should I choose?
 
-It's very simple, choose for an express installation if your application already contains a HTTP library such 
+It's very simple, choose for an express installation if your application already contains an HTTP library such 
 as GuzzleHTTP, otherwise just perform an quick installation.
 
 ### Quick installation
 
-For an quick installation we recommend you to install the `php-http/curl-client` package. This package is
+For a quick installation we recommend you to install the `php-http/curl-client` package. This package is
 a small abstraction around native php curl api. 
 
 ```bash
@@ -32,15 +32,13 @@ $ composer require bk203/rgw-admin-client
 
 ### Client configuration
 
-Before you can use the api client you need to provided the `apiUrl`, `apiKey` and `secretKey`. You need to provided
+Before you can use the api client you need to provide the `apiUrl`, `apiKey` and `secretKey`. You need to provided
 them when creating an instance of the client class.
 
 ```php
-$client = new Client([
-    'apiUrl'    => 'https://',
-    'apiKey'    => '',
-    'secretKey' => '',
-]);
+use bk203\RgwAdminClient\Client;
+
+$client = new Client('https://','apiKey','secretKey');
 ```
 
 ### Create and execute a request
@@ -69,7 +67,7 @@ See the [api docs](http://docs.ceph.com/docs/master/radosgw/adminops) for more i
 ## Credits
 
 - [Niels Tholenaar](https://github.com/nielstholenaar)
-- [All Contributors](https://github.com/pcextreme/rgw-admin-php/contributors)
+- [BK203](https://github.com/BK203)
 
 ## License
 

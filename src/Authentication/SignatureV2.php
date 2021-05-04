@@ -7,57 +7,21 @@ use Psr\Http\Message\RequestInterface;
 
 class SignatureV2 implements Authentication
 {
-    /**
-     * @var array
-     */
-    private $singableHeaders = ['Content-MD5', 'Content-Type'];
+    /** @var string[] */
+    private array $singableHeaders = ['Content-MD5', 'Content-Type'];
 
-    /**
-     * @var string
-     */
-    private $apiKey;
-
-    /**
-     * @var string
-     */
-    private $secretKey;
-
-    /**
-     * @param string $apiKey
-     * @param string $secretKey
-     */
-    public function __construct($apiKey, $secretKey)
+    public function __construct(private string $apiKey, private string $secretKey)
     {
-        $this->apiKey = $apiKey;
-        $this->secretKey = $secretKey;
     }
 
-    /**
-     * Authenticates a request.
-     *
-     * @param RequestInterface $request
-     *
-     * @return RequestInterface
-     */
     public function authenticate(RequestInterface $request): RequestInterface
     {
-        $request = $request->withHeader('Date', gmdate(\DateTime::RFC2822));
-
+        $request = $request->withHeader('Date', gmdate(\DateTimeInterface::RFC2822));
         $signed = $this->signString($this->createCanonicalizedString($request), $this->secretKey);
 
-        $request = $request->withHeader('Authorization', 'AWS '.$this->apiKey.':'.$signed);
-
-        return $request;
+        return $request->withHeader('Authorization', 'AWS '.$this->apiKey.':'.$signed);
     }
 
-    /**
-     * Sign the provided string with the secret key of the user.
-     *
-     * @param string $string
-     * @param string $secretKey
-     *
-     * @return string
-     */
     public function signString(string $string, string $secretKey): string
     {
         return base64_encode(
@@ -65,46 +29,33 @@ class SignatureV2 implements Authentication
         );
     }
 
-    /**
-     * @param RequestInterface $request
-     * @param string|null $expires
-     *
-     * @return string
-     */
     public function createCanonicalizedString(RequestInterface $request, ?string $expires = null): string
     {
         $buffer = $request->getMethod().PHP_EOL;
 
         // Add the interesting headers
         foreach ($this->singableHeaders as $header) {
-            $buffer .= (string)$request->getHeaderLine($header).PHP_EOL;
+            $buffer .= $request->getHeaderLine($header).PHP_EOL;
         }
 
         // Choose dates from left to right based on what's set
-        $date = $expires ?: (string)$request->getHeaderLine('date');
+        $date = $expires ?: $request->getHeaderLine('date');
 
-        $buffer .= "{$date}\n"
+        $buffer .= "$date\n"
             .$this->createCanonicalizedAmzHeaders($request)
             .$this->createCanonicalizedResource($request);
 
         return $buffer;
     }
 
-    /**
-     * Create a canonicalized AmzHeaders string for a signature.
-     *
-     * @param RequestInterface $request Request from which to gather headers
-     *
-     * @return string Returns canonicalized AMZ headers.
-     */
     private function createCanonicalizedAmzHeaders(RequestInterface $request): string
     {
         $headers = [];
         foreach ($request->getHeaders() as $name => $header) {
             $name = strtolower($name);
-            if (strpos($name, 'x-amz-') === 0) {
+            if (str_starts_with($name, 'x-amz-')) {
                 $value = trim((string)$header);
-                if ($value || $value === '0') {
+                if ($value) {
                     $headers[$name] = $name.':'.$value;
                 }
             }
@@ -119,13 +70,6 @@ class SignatureV2 implements Authentication
         return implode(PHP_EOL, $headers).PHP_EOL;
     }
 
-    /**
-     * Create a canonicalized resource for a request.
-     *
-     * @param RequestInterface $request Request for the resource
-     *
-     * @return string
-     */
     private function createCanonicalizedResource(RequestInterface $request): string
     {
         return $request->getUri()->getPath();

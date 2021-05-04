@@ -22,63 +22,31 @@ use RuntimeException;
 
 class Client implements ClientInterface
 {
-    /**
-     * @var string
-     */
-    private $apiUrl;
+    private RequestFactoryInterface $requestFactory;
+    private HttpClient $httpClient;
+    private PluginClient $pluginClient;
+    private UriFactoryInterface $uriFactory;
 
     /**
-     * @var string
-     */
-    private $apiKey;
-
-    /**
-     * @var string
-     */
-    private $secretKey;
-
-    /**
-     * @var RequestFactoryInterface
-     */
-    private $requestFactory;
-
-    /**
-     * @var HttpClient
-     */
-    private $httpClient;
-
-    /**
-     * @var PluginClient
-     */
-    private $pluginClient;
-
-    /**
-     * @var UriFactoryInterface
-     */
-    private $uriFactory;
-
-    /**
-     * Create rgw admin client instance.
+     * Client constructor.
+     * @param string $apiUrl
+     * @param string $apiKey
+     * @param string $secretKey
+     * @param array<string, object> $collaborators
      *
-     * @param array $options
-     * @param array $collaborators
-     *
-     * @throws InvalidArgumentException when the required options are not set.
      * @throws NotFoundException when there is no valid MessageFactory or HttpClient found.
      */
-    public function __construct(array $options = [], array $collaborators = [])
-    {
-        $this->assertRequiredOptions($options);
-        $this->setOptions($options);
+    public function __construct(
+        private string $apiUrl,
+        private string $apiKey,
+        private string $secretKey,
+        array $collaborators = []
+    ) {
         $this->setCollaborators($collaborators);
     }
 
     /**
-     * Set options.
-     *
-     * @param array $options
-     *
-     * @return void
+     * @param array<string, string|int|bool> $options
      */
     protected function setOptions(array $options): void
     {
@@ -92,12 +60,7 @@ class Client implements ClientInterface
     }
 
     /**
-     * Set collaborators.
-     *
-     * @param array $collaborators
-     *
-     * @return void
-     *
+     * @param array<string, object> $collaborators
      * @throws NotFoundException when there is no MessageFactory, HttpClient or UriFactory found.
      */
     protected function setCollaborators(array $collaborators): void
@@ -115,75 +78,37 @@ class Client implements ClientInterface
         $this->setHttpClient($collaborators['httpClient']);
 
         if (empty($collaborators['uriFactory'])) {
-            $collaborators['uriFactory'] = Psr17FactoryDiscovery::findUrlFactory();
+            $collaborators['uriFactory'] = Psr17FactoryDiscovery::findUriFactory();
         }
 
         $this->setUriFactory($collaborators['uriFactory']);
     }
 
-    /**
-     * Set the UriFactory instance.
-     *
-     * @param UriFactoryInterface $uriFactory
-     *
-     * @return void
-     */
     public function setUriFactory(UriFactoryInterface $uriFactory): void
     {
         $this->uriFactory = $uriFactory;
     }
 
-    /**
-     * Returns the current UriFactory instance.
-     *
-     * @return UriFactoryInterface
-     */
     public function getUriFactory(): UriFactoryInterface
     {
         return $this->uriFactory;
     }
 
-    /**
-     * Set the RequestFactory instance.
-     *
-     * @param RequestFactoryInterface $messageFactory
-     *
-     * @return void
-     */
     public function setRequestFactory(RequestFactoryInterface $requestFactory): void
     {
         $this->requestFactory = $requestFactory;
     }
 
-    /**
-     * Returns the current RequestFactory instance.
-     *
-     * @return RequestFactoryInterface
-     */
     public function getRequestFactory(): RequestFactoryInterface
     {
         return $this->requestFactory;
     }
 
-    /**
-     * Set the HttpClient instance.
-     *
-     * @param HttpClient $httpClient
-     *
-     * @return void
-     */
     public function setHttpClient(HttpClient $httpClient): void
     {
         $this->httpClient = $httpClient;
     }
 
-    /**
-     * Returns the current HttpClient instance.
-     *
-     * @return PluginClient
-     *
-     * @throws RuntimeException
-     */
     public function getHttpClient(): PluginClient
     {
         if ($this->pluginClient !== null) {
@@ -200,36 +125,6 @@ class Client implements ClientInterface
         $this->pluginClient = new PluginClient($this->httpClient, $plugins);
 
         return $this->pluginClient;
-    }
-
-    /**
-     * Return all the required options.
-     *
-     * @return array
-     */
-    protected function getRequiredOptions(): array
-    {
-        return ['apiUrl', 'apiKey', 'secretKey'];
-    }
-
-    /**
-     * Verifies that all required options have been provided.
-     *
-     * @param array $options
-     *
-     * @return void
-     *
-     * @throws InvalidArgumentException
-     */
-    private function assertRequiredOptions(array $options): void
-    {
-        $missing = array_diff_key(array_flip($this->getRequiredOptions()), $options);
-
-        if (!empty($missing)) {
-            throw new InvalidArgumentException(
-                'Required option(s) not defined: '.implode(',', array_keys($missing))
-            );
-        }
     }
 
     /**
@@ -258,7 +153,7 @@ class Client implements ClientInterface
      *
      * @param string $command
      * @param string $method
-     * @param array $options
+     * @param array<string, string|int|bool> $options
      *
      * @return RequestInterface
      *
@@ -272,21 +167,21 @@ class Client implements ClientInterface
     }
 
     /**
-     * Send the HTTP request and return the parsed response.
+     * Send the HTTP request and return the validated response.
      *
      * @param RequestInterface $request
      *
-     * @return mixed
+     * @return string
      *
      * @throws Exception
      * @throws RuntimeException
      * @throws ClientExceptionInterface
      */
-    public function sendRequest(RequestInterface $request)
+    public function sendRequest(RequestInterface $request): string
     {
         $response = $this->getHttpClient()->sendRequest($request);
 
-        return $this->parseResponse($response);
+        return $this->validateResponse($response);
     }
 
     /**
@@ -294,11 +189,11 @@ class Client implements ClientInterface
      *
      * @param ResponseInterface $response
      *
-     * @return mixed
+     * @return string
      *
      * @throws Exception
      */
-    protected function parseResponse(ResponseInterface $response)
+    protected function validateResponse(ResponseInterface $response): string
     {
         $readable = $response->getBody()->isReadable();
 
@@ -306,7 +201,7 @@ class Client implements ClientInterface
             throw new Exception('Unable to parse response.');
         }
 
-        return json_decode($response->getBody()->getContents());
+        return $response->getBody()->getContents();
     }
 
     /**
@@ -315,20 +210,18 @@ class Client implements ClientInterface
      * @param string $method
      * @param array $arguments
      *
-     * @return RequestInterface
+     * @return string
      *
      * @throws Exception
      * @throws InvalidArgumentException
      * @throws RuntimeException
      * @throws ClientExceptionInterface
      */
-    public function __call(string $method, array $arguments): RequestInterface
+    public function __call(string $method, array $arguments): string
     {
         $method = strtolower($method);
 
-        if ($method !== 'delete' && $method !== 'get' &&
-            $method !== 'post' && $method !== 'put'
-        ) {
+        if (!in_array($method, ['delete','get','post','put'])) {
             throw new InvalidArgumentException('Unsupported HTTP method specified.');
         }
 

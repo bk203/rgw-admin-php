@@ -28,11 +28,11 @@ interface ClientInterface
     /**
      * Set the RequestFactory instance.
      *
-     * @param RequestFactoryInterface $messageFactory
+     * @param RequestFactoryInterface $requestFactory
      *
      * @return void
      */
-    public function setRequestFactory(RequestFactoryInterface $messageFactory): void;
+    public function setRequestFactory(RequestFactoryInterface $requestFactory): void;
 
     /**
      * Returns the current MessageFactory instance.
@@ -69,11 +69,11 @@ interface ClientInterface
     public function createRequest(string $command, string $method, array $options = []): RequestInterface;
 
     /**
-     * Send the HTTP request and return the parsed response.
+     * Send the HTTP request and return the validated response.
      *
      * @param RequestInterface $request
      *
-     * @return mixed
+     * @return string
      */
-    public function sendRequest(RequestInterface $request);
+    public function sendRequest(RequestInterface $request): string;
 }
