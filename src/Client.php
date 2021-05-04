@@ -24,7 +24,7 @@ class Client implements ClientInterface
 {
     private RequestFactoryInterface $requestFactory;
     private HttpClient $httpClient;
-    private PluginClient $pluginClient;
+    private ?PluginClient $pluginClient = null;
     private UriFactoryInterface $uriFactory;
 
     /**
@@ -43,20 +43,6 @@ class Client implements ClientInterface
         array $collaborators = []
     ) {
         $this->setCollaborators($collaborators);
-    }
-
-    /**
-     * @param array<string, string|int|bool> $options
-     */
-    protected function setOptions(array $options): void
-    {
-        $possible = $this->getRequiredOptions();
-
-        $configured = array_intersect_key($options, array_flip($possible));
-
-        foreach ($configured as $key => $value) {
-            $this->{$key} = $value;
-        }
     }
 
     /**

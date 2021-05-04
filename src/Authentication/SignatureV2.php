@@ -54,7 +54,7 @@ class SignatureV2 implements Authentication
         foreach ($request->getHeaders() as $name => $header) {
             $name = strtolower($name);
             if (str_starts_with($name, 'x-amz-')) {
-                $value = trim((string)$header);
+                $value = trim(current($header));
                 if ($value) {
                     $headers[$name] = $name.':'.$value;
                 }
