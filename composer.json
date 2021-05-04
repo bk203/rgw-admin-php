@@ -19,5 +19,9 @@
         "php-http/discovery": "^1.13",
         "php-http/client-common": "^2.3"
     },
+    "suggest": {
+        "php-http/curl-client" : "Abstraction around native php curl api",
+        "guzzlehttp/psr7" : "Suggestion for full PSR-7 message implementation"
+    },
     "minimum-stability": "stable"
 }
